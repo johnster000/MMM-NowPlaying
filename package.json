@@ -1,0 +1,12 @@
+{
+  "name": "MMM-NowPlaying",
+  "version": "1.0.0",
+  "description": "MagicMirror module — shows what's playing on Google Nest / Cast speakers",
+  "main": "MMM-NowPlaying.js",
+  "keywords": ["MagicMirror", "module", "Google", "Cast", "Nest", "music"],
+  "license": "MIT",
+  "dependencies": {
+    "castv2-client": "^0.2.0",
+    "bonjour-service": "^1.3.0"
+  }
+}

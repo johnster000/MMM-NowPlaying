@@ -1,0 +1,226 @@
+/* ================================================================
+   MMM-NowPlaying — mirror display styles
+   ================================================================ */
+
+.mmm-nowplaying-wrapper {
+	box-sizing: border-box;
+	overflow: hidden;
+	font-size: 0.92em;
+}
+
+/* ----------------------------------------------------------------
+   Big card — single active speaker
+   ---------------------------------------------------------------- */
+
+.nowplaying-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.nowplaying-card.paused {
+	opacity: 0.75;
+}
+
+/* Album art */
+.nowplaying-art-wrap {
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	overflow: hidden;
+	border-radius: 8px;
+	margin-bottom: 14px;
+	background: rgba(255, 255, 255, 0.06);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.nowplaying-art-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.nowplaying-art-placeholder {
+	font-size: 3.5em;
+	color: rgba(255, 255, 255, 0.15);
+}
+
+/* Song info */
+.nowplaying-info {
+	padding: 0 2px;
+	margin-bottom: 12px;
+}
+
+.nowplaying-title {
+	font-size: 1.1em;
+	font-weight: 700;
+	color: #fff;
+	margin-bottom: 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+.nowplaying-artist {
+	font-size: 0.9em;
+	color: #aaa;
+	margin-bottom: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.nowplaying-album {
+	font-size: 0.78em;
+	color: #555;
+	margin-bottom: 6px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.nowplaying-device-label {
+	font-size: 0.68em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: rgba(255, 255, 255, 0.28);
+	margin-top: 4px;
+}
+
+/* Controls */
+.nowplaying-controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+}
+
+.nowplaying-btn {
+	background: rgba(255, 255, 255, 0.08);
+	border: none;
+	color: rgba(255, 255, 255, 0.55);
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	font-size: 0.95rem;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.15s, color 0.15s, transform 0.1s;
+	line-height: 1;
+	padding: 0;
+}
+
+.nowplaying-btn:hover {
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
+}
+
+.nowplaying-btn:active {
+	transform: scale(0.9);
+}
+
+/* Play / pause is slightly larger */
+.nowplaying-btn-primary {
+	width: 48px;
+	height: 48px;
+	background: rgba(255, 255, 255, 0.14);
+	color: #fff;
+	font-size: 1.1rem;
+}
+
+.nowplaying-btn-primary:hover {
+	background: rgba(255, 255, 255, 0.22);
+}
+
+/* ----------------------------------------------------------------
+   List mode — multiple active speakers
+   ---------------------------------------------------------------- */
+
+.nowplaying-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.nowplaying-list-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 9px 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nowplaying-list-item:first-child {
+	border-top: none;
+	padding-top: 0;
+}
+
+.nowplaying-list-item.paused {
+	opacity: 0.55;
+}
+
+/* Thumbnail */
+.nowplaying-list-thumb {
+	width: 54px;
+	height: 54px;
+	border-radius: 5px;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+.nowplaying-list-thumb-ph {
+	background: rgba(255, 255, 255, 0.06);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: rgba(255, 255, 255, 0.18);
+	font-size: 1.4em;
+	flex-shrink: 0;
+}
+
+/* Per-item info */
+.nowplaying-list-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.nowplaying-list-title-row {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.nowplaying-list-title {
+	font-size: 0.9em;
+	font-weight: 700;
+	color: #fff;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1;
+	min-width: 0;
+}
+
+.nowplaying-list-device {
+	font-size: 0.65em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+	color: rgba(255, 255, 255, 0.28);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.nowplaying-list-artist {
+	font-size: 0.8em;
+	color: #777;
+	margin-top: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
