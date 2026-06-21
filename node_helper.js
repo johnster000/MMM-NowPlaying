@@ -312,6 +312,21 @@ module.exports = NodeHelper.create({
 			res.json({ ok: true });
 		});
 
+		// Add a device manually
+		app.post("/api/devices", (req, res) => {
+			const { name, host, port } = req.body || {};
+			if (!host) return res.status(400).json({ error: "host is required" });
+			this.devices[host] = {
+				name:     name || host,
+				host,
+				port:     port || 8009,
+				lastSeen: new Date().toISOString(),
+				manual:   true
+			};
+			this.saveCachedDevices();
+			res.json({ ok: true });
+		});
+
 		// Remove a stale device from the cache
 		app.delete("/api/devices/:host", (req, res) => {
 			const host = req.params.host;

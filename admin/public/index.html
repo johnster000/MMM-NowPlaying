@@ -146,6 +146,44 @@ body {
   margin-top: 2px;
 }
 
+/* ── Add device form ── */
+.add-device-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.add-device-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-device-row input {
+  flex: 1;
+  min-width: 100px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.add-device-row input:focus { border-color: var(--accent); }
+.add-device-row input::placeholder { color: var(--text-2); }
+
+.add-error {
+  font-size: 0.78rem;
+  color: var(--danger);
+  margin-top: 8px;
+  display: none;
+}
+.add-error.visible { display: block; }
+
 /* ── Empty state ── */
 .empty-state {
   text-align: center;
@@ -181,6 +219,16 @@ body {
 </header>
 
 <main class="content">
+  <p class="section-label">Add Device Manually</p>
+  <div class="add-device-card">
+    <div class="add-device-row">
+      <input type="text" id="add-name" placeholder="Name (e.g. Bedroom)" autocomplete="off">
+      <input type="text" id="add-host" placeholder="IP Address (e.g. 192.168.1.50)" autocomplete="off" inputmode="decimal">
+      <button class="btn btn-primary" id="add-btn">Add</button>
+    </div>
+    <div class="add-error" id="add-error"></div>
+  </div>
+
   <p class="section-label">Discovered Devices</p>
   <div id="devices-container"></div>
 </main>
@@ -270,6 +318,37 @@ document.getElementById("rediscover-btn").addEventListener("click", async functi
     this.classList.remove("loading");
     this.disabled = false;
   }
+});
+
+document.getElementById("add-btn").addEventListener("click", async function () {
+  const nameEl  = document.getElementById("add-name");
+  const hostEl  = document.getElementById("add-host");
+  const errorEl = document.getElementById("add-error");
+  const host = hostEl.value.trim();
+  const name = nameEl.value.trim();
+
+  errorEl.classList.remove("visible");
+  if (!host) { errorEl.textContent = "IP address is required."; errorEl.classList.add("visible"); return; }
+
+  this.disabled = true;
+  try {
+    await api("/api/devices", { method: "POST", body: JSON.stringify({ name: name || host, host }) });
+    nameEl.value = "";
+    hostEl.value = "";
+    loadState();
+  } catch (err) {
+    errorEl.textContent = err.message || "Failed to add device.";
+    errorEl.classList.add("visible");
+  } finally {
+    this.disabled = false;
+  }
+});
+
+// Submit form on Enter key in either input
+["add-name", "add-host"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("add-btn").click();
+  });
 });
 
 // Auto-refresh every 5 seconds so status dots stay live
