@@ -19,8 +19,9 @@ Module.register("MMM-NowPlaying", {
 	// ---- lifecycle -------------------------------------------------
 
 	start: function () {
-		this.playing = [];
-		this.loaded  = false;
+		this.playing  = [];
+		this.loaded   = false;
+		this.settings = {};
 		this.sendSocketNotification("NOWPLAYING_INIT", this.config);
 	},
 
@@ -30,6 +31,7 @@ Module.register("MMM-NowPlaying", {
 
 	socketNotificationReceived: function (notification, payload) {
 		if (notification === "NOWPLAYING_STATE") {
+			if (payload.settings) this.settings = payload.settings;
 			const incoming = payload.playing || [];
 
 			// During a track transition the Cast device briefly returns
@@ -83,7 +85,7 @@ Module.register("MMM-NowPlaying", {
 		card.className = "nowplaying-card";
 		if (device.playerState === "PAUSED") card.classList.add("paused");
 
-		// ---- Album art ----
+		// Art — fills card as background layer
 		const artWrap = document.createElement("div");
 		artWrap.className = "nowplaying-art-wrap";
 		if (device.artUrl) {
@@ -91,46 +93,50 @@ Module.register("MMM-NowPlaying", {
 			img.className = "nowplaying-art-img";
 			img.src = device.artUrl;
 			img.alt = "";
+			const opacity = (this.settings && this.settings.artOpacity !== undefined)
+				? this.settings.artOpacity : 0.75;
+			img.style.opacity = opacity;
 			artWrap.appendChild(img);
 		} else {
-			artWrap.classList.add("nowplaying-art-placeholder");
-			artWrap.textContent = "♪";
+			const ph = document.createElement("div");
+			ph.className = "nowplaying-art-placeholder";
+			ph.textContent = "♪";
+			artWrap.appendChild(ph);
 		}
 		card.appendChild(artWrap);
 
-		// ---- Info ----
-		const info = document.createElement("div");
-		info.className = "nowplaying-info";
+		// Gradient overlay for text legibility
+		const overlay = document.createElement("div");
+		overlay.className = "nowplaying-art-overlay";
+		card.appendChild(overlay);
+
+		// Foreground text + controls
+		const body = document.createElement("div");
+		body.className = "nowplaying-card-body";
 
 		const title = document.createElement("div");
 		title.className = "nowplaying-title";
 		title.textContent = device.title || "Unknown";
-		info.appendChild(title);
+		body.appendChild(title);
 
-		if (device.artist) {
-			const artist = document.createElement("div");
-			artist.className = "nowplaying-artist";
-			artist.textContent = device.artist;
-			info.appendChild(artist);
-		}
-
-		if (this.config.showAlbum && device.album) {
-			const album = document.createElement("div");
-			album.className = "nowplaying-album";
-			album.textContent = device.album;
-			info.appendChild(album);
+		const subParts = [device.artist];
+		if (this.config.showAlbum && device.album) subParts.push(device.album);
+		const subText = subParts.filter(Boolean).join("  ·  ");
+		if (subText) {
+			const sub = document.createElement("div");
+			sub.className = "nowplaying-sub";
+			sub.textContent = subText;
+			body.appendChild(sub);
 		}
 
 		const deviceLabel = document.createElement("div");
 		deviceLabel.className = "nowplaying-device-label";
 		deviceLabel.textContent = device.deviceName;
-		info.appendChild(deviceLabel);
+		body.appendChild(deviceLabel);
 
-		card.appendChild(info);
+		body.appendChild(this.buildControls(device));
 
-		// ---- Controls ----
-		card.appendChild(this.buildControls(device));
-
+		card.appendChild(body);
 		return card;
 	},
 

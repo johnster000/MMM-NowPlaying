@@ -10,29 +10,25 @@
 
 /* ----------------------------------------------------------------
    Big card — single active speaker
+   Full-bleed art background with gradient overlay
    ---------------------------------------------------------------- */
 
 .nowplaying-card {
-	display: flex;
-	flex-direction: column;
-	gap: 0;
+	position: relative;
+	overflow: hidden;
+	border-radius: 10px;
+	min-height: 190px;
 }
 
 .nowplaying-card.paused {
 	opacity: 0.75;
 }
 
-/* Album art */
+/* Art fills the card as a background layer */
 .nowplaying-art-wrap {
-	width: 100%;
-	aspect-ratio: 1 / 1;
-	overflow: hidden;
-	border-radius: 8px;
-	margin-bottom: 14px;
-	background: rgba(255, 255, 255, 0.06);
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	position: absolute;
+	inset: 0;
+	background: rgba(255, 255, 255, 0.04);
 }
 
 .nowplaying-art-img {
@@ -40,61 +36,74 @@
 	height: 100%;
 	object-fit: cover;
 	display: block;
+	/* opacity set inline from artOpacity setting */
 }
 
 .nowplaying-art-placeholder {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	font-size: 3.5em;
-	color: rgba(255, 255, 255, 0.15);
+	color: rgba(255, 255, 255, 0.12);
 }
 
-/* Song info */
-.nowplaying-info {
-	padding: 0 2px;
-	margin-bottom: 12px;
+/* Gradient overlay — ensures text is legible regardless of art colour */
+.nowplaying-art-overlay {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.08) 0%,
+		rgba(0, 0, 0, 0.55) 55%,
+		rgba(0, 0, 0, 0.88) 100%
+	);
+}
+
+/* Foreground content floats above art */
+.nowplaying-card-body {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	min-height: 190px;
+	padding: 14px;
+	gap: 4px;
 }
 
 .nowplaying-title {
-	font-size: 1.1em;
+	font-size: 1.05em;
 	font-weight: 700;
 	color: #fff;
-	margin-bottom: 4px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
 }
 
-.nowplaying-artist {
-	font-size: 0.9em;
-	color: #aaa;
+.nowplaying-sub {
+	font-size: 0.82em;
+	color: rgba(255, 255, 255, 0.62);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	margin-bottom: 2px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.nowplaying-album {
-	font-size: 0.78em;
-	color: #555;
-	margin-bottom: 6px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 .nowplaying-device-label {
-	font-size: 0.68em;
+	font-size: 0.63em;
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
-	color: rgba(255, 255, 255, 0.28);
-	margin-top: 4px;
+	color: rgba(255, 255, 255, 0.32);
+	margin-bottom: 6px;
 }
 
 /* Controls */
 .nowplaying-controls {
 	display: flex;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
 	gap: 8px;
 }

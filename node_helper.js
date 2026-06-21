@@ -29,11 +29,14 @@ module.exports = NodeHelper.create({
 		this.bonjour     = null;
 		this.adminServer = null;
 
-		this.dataDir     = path.join(this.path, "data");
-		this.devicesFile = path.join(this.dataDir, "devices.json");
+		this.settings     = { artOpacity: 0.75 };
+		this.dataDir      = path.join(this.path, "data");
+		this.devicesFile  = path.join(this.dataDir, "devices.json");
+		this.settingsFile = path.join(this.dataDir, "settings.json");
 
 		this.ensureDataDir();
 		this.loadCachedDevices();
+		this.loadSettings();
 		console.log("[MMM-NowPlaying] helper started");
 	},
 
@@ -82,6 +85,25 @@ module.exports = NodeHelper.create({
 			fs.writeFileSync(this.devicesFile, JSON.stringify({ devices: this.devices }, null, 2));
 		} catch (err) {
 			console.error("[MMM-NowPlaying] failed to save devices:", err.message);
+		}
+	},
+
+	loadSettings: function () {
+		try {
+			if (!fs.existsSync(this.settingsFile)) return;
+			const raw = fs.readFileSync(this.settingsFile, "utf8");
+			Object.assign(this.settings, JSON.parse(raw));
+		} catch (err) {
+			console.error("[MMM-NowPlaying] failed to load settings:", err.message);
+		}
+	},
+
+	saveSettings: function () {
+		try {
+			this.ensureDataDir();
+			fs.writeFileSync(this.settingsFile, JSON.stringify(this.settings, null, 2));
+		} catch (err) {
+			console.error("[MMM-NowPlaying] failed to save settings:", err.message);
 		}
 	},
 
@@ -274,7 +296,7 @@ module.exports = NodeHelper.create({
 	sendState: function () {
 		const playing = Object.values(this.playing)
 			.filter(p => p.playerState !== "IDLE");
-		this.sendSocketNotification("NOWPLAYING_STATE", { playing });
+		this.sendSocketNotification("NOWPLAYING_STATE", { playing, settings: this.settings });
 	},
 
 	// ---- admin server ----------------------------------------------
@@ -304,6 +326,22 @@ module.exports = NodeHelper.create({
 				return a.name.localeCompare(b.name);
 			});
 			res.json({ devices });
+		});
+
+		// Read / update appearance settings
+		app.get("/api/settings", (req, res) => {
+			res.json(this.settings);
+		});
+
+		app.post("/api/settings", (req, res) => {
+			const { artOpacity } = req.body || {};
+			if (artOpacity !== undefined) {
+				const val = parseFloat(artOpacity);
+				if (!isNaN(val)) this.settings.artOpacity = Math.min(1, Math.max(0.1, val));
+			}
+			this.saveSettings();
+			this.sendState();
+			res.json(this.settings);
 		});
 
 		// Trigger a fresh mDNS scan

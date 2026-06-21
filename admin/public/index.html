@@ -184,6 +184,64 @@ body {
 }
 .add-error.visible { display: block; }
 
+/* ── Settings card ── */
+.settings-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-row { display: flex; flex-direction: column; gap: 6px; }
+
+.settings-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.settings-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+input[type=range]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
 /* ── Empty state ── */
 .empty-state {
   text-align: center;
@@ -227,6 +285,17 @@ body {
       <button class="btn btn-primary" id="add-btn">Add</button>
     </div>
     <div class="add-error" id="add-error"></div>
+  </div>
+
+  <p class="section-label">Appearance</p>
+  <div class="settings-card">
+    <div class="settings-row">
+      <div class="settings-label">
+        <span>Album Art Opacity</span>
+        <span class="settings-value" id="opacity-value">75%</span>
+      </div>
+      <input type="range" id="opacity-slider" min="10" max="100" value="75" step="5">
+    </div>
   </div>
 
   <p class="section-label">Discovered Devices</p>
@@ -350,6 +419,32 @@ document.getElementById("add-btn").addEventListener("click", async function () {
     if (e.key === "Enter") document.getElementById("add-btn").click();
   });
 });
+
+// ── Appearance settings ──
+async function loadSettings() {
+  try {
+    const s = await api("/api/settings");
+    const pct = Math.round((s.artOpacity || 0.75) * 100);
+    document.getElementById("opacity-slider").value = pct;
+    document.getElementById("opacity-value").textContent = pct + "%";
+  } catch (_) {}
+}
+
+let opacityDebounce;
+document.getElementById("opacity-slider").addEventListener("input", function () {
+  document.getElementById("opacity-value").textContent = this.value + "%";
+  clearTimeout(opacityDebounce);
+  opacityDebounce = setTimeout(async () => {
+    try {
+      await api("/api/settings", {
+        method: "POST",
+        body: JSON.stringify({ artOpacity: parseInt(this.value, 10) / 100 })
+      });
+    } catch (_) {}
+  }, 300);
+});
+
+loadSettings();
 
 // Auto-refresh every 5 seconds so status dots stay live
 setInterval(loadState, 5000);
