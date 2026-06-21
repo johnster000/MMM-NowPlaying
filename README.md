@@ -97,10 +97,23 @@ The module will discover your Nest speakers automatically within a few seconds o
 
 ---
 
+## Admin Interface
+
+Open `http://<mirror-ip>:8083` from any browser on your local network.
+
+- **Device list** — all discovered speakers with name, IP, last-seen time, and a live now-playing status dot
+- **Rediscover** — forces a fresh mDNS scan; useful when a speaker's IP has changed due to DHCP. Wait ~4 seconds for devices to re-announce
+- **✕ button** — removes a stale device entry from the cache
+
+Discovered devices are saved to `data/devices.json` so they are immediately available after a MagicMirror restart without waiting for mDNS.
+
+---
+
 ## Configuration Options
 
 | Option | Default | Description |
 |---|---|---|
+| `adminPort` | `8083` | Port the admin interface listens on. |
 | `pollInterval` | `5000` | How often (ms) to check each speaker for status updates. |
 | `updateFadeSpeed` | `500` | Fade animation duration (ms) when the display refreshes. |
 | `maxWidth` | `"360px"` | Maximum widget width. Match this to your MagicMirror region width. |

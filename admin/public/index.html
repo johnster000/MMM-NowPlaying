@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NowPlaying Devices</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface-2: #f9f9f9;
+  --text: #1c1c1e;
+  --text-2: #6c6c70;
+  --accent: #007aff;
+  --success: #34c759;
+  --warning: #ff9500;
+  --danger: #ff3b30;
+  --border: rgba(60,60,67,0.12);
+  --r: 14px;
+  --r-sm: 10px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.app-header {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+
+/* ── Layout ── */
+.content {
+  padding: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  margin: 20px 0 8px;
+}
+.section-label:first-child { margin-top: 4px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.btn:active { opacity: 0.7; transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-danger  { background: rgba(255,59,48,0.1); color: var(--danger); height: 34px; padding: 0 12px; font-size: 0.82rem; }
+.btn-icon    { width: 34px; height: 34px; padding: 0; border-radius: 8px; }
+
+/* ── Device cards ── */
+.device-card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.device-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #ccc;
+}
+.device-dot.playing  { background: var(--success); box-shadow: 0 0 0 3px rgba(52,199,89,0.2); }
+.device-dot.paused   { background: var(--warning); }
+.device-dot.idle     { background: #c8c8cc; }
+
+.device-info { flex: 1; min-width: 0; }
+
+.device-name {
+  font-size: 0.975rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-ip {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  font-family: "SF Mono", "Menlo", "Monaco", monospace;
+  margin-top: 1px;
+}
+
+.device-now-playing {
+  font-size: 0.82rem;
+  color: var(--success);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-now-playing.paused { color: var(--warning); }
+
+.device-last-seen {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-2);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ── Spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: none;
+}
+.btn.loading .spinner { display: block; }
+.btn.loading .btn-label { display: none; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-title">Cast Devices</div>
+  <button class="btn btn-primary" id="rediscover-btn">
+    <span class="btn-label">Rediscover</span>
+    <span class="spinner"></span>
+  </button>
+</header>
+
+<main class="content">
+  <p class="section-label">Discovered Devices</p>
+  <div id="devices-container"></div>
+</main>
+
+<script>
+async function api(path, options) {
+  const res = await fetch(path, Object.assign({ headers: { "Content-Type": "application/json" } }, options));
+  if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || res.statusText); }
+  return res.json();
+}
+
+function escapeHtml(str) {
+  const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML;
+}
+
+function relativeTime(isoString) {
+  if (!isoString) return "";
+  const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
+  if (diff < 5)  return "just now";
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+async function loadState() {
+  const { devices } = await api("/api/state");
+  renderDevices(devices);
+}
+
+function renderDevices(devices) {
+  const container = document.getElementById("devices-container");
+
+  if (!devices || devices.length === 0) {
+    container.innerHTML = '<div class="empty-state">No devices found yet.<br>Tap <strong>Rediscover</strong> to scan the network.</div>';
+    return;
+  }
+
+  container.innerHTML = devices.map(d => {
+    const isPlaying = d.playing && d.playing.playerState === "PLAYING";
+    const isPaused  = d.playing && d.playing.playerState === "PAUSED";
+    const dotClass  = isPlaying ? "playing" : isPaused ? "paused" : "idle";
+
+    let nowPlayingHtml = "";
+    if (d.playing) {
+      const parts = [d.playing.title, d.playing.artist].filter(Boolean);
+      const label = parts.length ? parts.join("  —  ") : "Playing";
+      nowPlayingHtml = `<div class="device-now-playing ${isPaused ? "paused" : ""}">${isPaused ? "⏸ " : "▶ "}${escapeHtml(label)}</div>`;
+    }
+
+    const lastSeen = d.lastSeen ? `<div class="device-last-seen">Last seen ${relativeTime(d.lastSeen)}</div>` : "";
+
+    return `
+      <div class="device-card">
+        <div class="device-dot ${dotClass}"></div>
+        <div class="device-info">
+          <div class="device-name">${escapeHtml(d.name)}</div>
+          <div class="device-ip">${escapeHtml(d.host)}</div>
+          ${nowPlayingHtml}
+          ${lastSeen}
+        </div>
+        <button class="btn btn-danger btn-icon" data-action="delete" data-host="${escapeHtml(d.host)}" title="Remove from cache">✕</button>
+      </div>`;
+  }).join("");
+}
+
+document.getElementById("devices-container").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-action=delete]");
+  if (!btn) return;
+  if (!confirm(`Remove "${btn.dataset.host}" from the device cache?`)) return;
+  await api(`/api/devices/${encodeURIComponent(btn.dataset.host)}`, { method: "DELETE" });
+  loadState();
+});
+
+document.getElementById("rediscover-btn").addEventListener("click", async function () {
+  this.classList.add("loading");
+  this.disabled = true;
+  try {
+    await api("/api/rediscover", { method: "POST" });
+    // Give mDNS ~4s to collect responses before refreshing
+    setTimeout(() => {
+      loadState();
+      this.classList.remove("loading");
+      this.disabled = false;
+    }, 4000);
+  } catch (err) {
+    this.classList.remove("loading");
+    this.disabled = false;
+  }
+});
+
+// Auto-refresh every 5 seconds so status dots stay live
+setInterval(loadState, 5000);
+loadState();
+</script>
+</body>
+</html>

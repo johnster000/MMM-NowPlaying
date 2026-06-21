@@ -8,6 +8,7 @@
 Module.register("MMM-NowPlaying", {
 
 	defaults: {
+		adminPort:       8083,
 		pollInterval:    5000,
 		updateFadeSpeed: 500,
 		maxWidth:        "360px",
