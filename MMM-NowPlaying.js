@@ -29,8 +29,27 @@ Module.register("MMM-NowPlaying", {
 
 	socketNotificationReceived: function (notification, payload) {
 		if (notification === "NOWPLAYING_STATE") {
-			this.playing = payload.playing || [];
-			this.loaded  = true;
+			const incoming = payload.playing || [];
+
+			// During a track transition the Cast device briefly returns
+			// empty metadata. Keep the previous title/art visible until
+			// the new track's metadata actually arrives.
+			this.playing = incoming.map(next => {
+				if (!next.title && !next.artist) {
+					const prev = this.playing.find(p => p.host === next.host);
+					if (prev) {
+						return Object.assign({}, next, {
+							title:  prev.title,
+							artist: prev.artist,
+							album:  prev.album,
+							artUrl: next.artUrl || prev.artUrl
+						});
+					}
+				}
+				return next;
+			});
+
+			this.loaded = true;
 			this.updateDom(this.config.updateFadeSpeed);
 		}
 	},
@@ -172,39 +191,29 @@ Module.register("MMM-NowPlaying", {
 			item.appendChild(ph);
 		}
 
-		// Info
+		// Info panel — 3 rows distributed to match thumbnail height
 		const info = document.createElement("div");
 		info.className = "nowplaying-list-info";
 
-		const row = document.createElement("div");
-		row.className = "nowplaying-list-title-row";
+		// Row 1: speaker name
+		const deviceEl = document.createElement("div");
+		deviceEl.className = "nowplaying-list-device";
+		deviceEl.textContent = device.deviceName;
+		info.appendChild(deviceEl);
 
-		const titleSpan = document.createElement("span");
-		titleSpan.className = "nowplaying-list-title";
-		titleSpan.textContent = device.title || "Unknown";
-		row.appendChild(titleSpan);
+		// Row 2: Song — Artist on one line
+		const track = document.createElement("div");
+		track.className = "nowplaying-list-track";
+		const parts = [device.title || "Playing", device.artist].filter(Boolean);
+		track.textContent = parts.join("  —  ");
+		info.appendChild(track);
 
-		const badge = document.createElement("span");
-		badge.className = "nowplaying-list-device";
-		badge.textContent = device.deviceName;
-		row.appendChild(badge);
-
-		info.appendChild(row);
-
-		if (device.artist) {
-			const artist = document.createElement("div");
-			artist.className = "nowplaying-list-artist";
-			artist.textContent = device.artist;
-			info.appendChild(artist);
-		}
-
-		item.appendChild(info);
-
-		// Controls — compact version reusing buildControls()
+		// Row 3: compact controls
 		const controls = this.buildControls(device);
 		controls.classList.add("nowplaying-list-controls");
 		info.appendChild(controls);
 
+		item.appendChild(info);
 		return item;
 	}
 });
