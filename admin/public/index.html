@@ -146,6 +146,19 @@ body {
   margin-top: 2px;
 }
 
+.device-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(0,122,255,0.1);
+  color: var(--accent);
+  vertical-align: middle;
+  margin-left: 6px;
+  letter-spacing: 0.02em;
+}
+
 /* ── Add device form ── */
 .add-device-card {
   background: var(--surface);
@@ -354,7 +367,7 @@ function renderDevices(devices) {
       <div class="device-card">
         <div class="device-dot ${dotClass}"></div>
         <div class="device-info">
-          <div class="device-name">${escapeHtml(d.name)}</div>
+          <div class="device-name">${escapeHtml(d.name)}${d.manual ? '<span class="device-badge">Manual</span>' : ''}</div>
           <div class="device-ip">${escapeHtml(d.host)}</div>
           ${nowPlayingHtml}
           ${lastSeen}

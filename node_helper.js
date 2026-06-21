@@ -136,15 +136,25 @@ module.exports = NodeHelper.create({
 			browser.on("up", (svc) => {
 				const host = (svc.addresses || []).find(a => !a.includes(":")) || svc.host;
 				if (!host) return;
-				const name = (svc.txt && svc.txt.fn) || svc.name;
-				this.devices[host] = { name, host, port: svc.port || 8009, lastSeen: new Date().toISOString() };
+				const mdnsName = (svc.txt && svc.txt.fn) || svc.name;
+				const existing = this.devices[host];
+				// Preserve user-given name and manual flag if device was pinned
+				this.devices[host] = {
+					name:     (existing && existing.manual) ? existing.name : mdnsName,
+					host,
+					port:     svc.port || 8009,
+					lastSeen: new Date().toISOString(),
+					manual:   (existing && existing.manual) || false
+				};
 				this.saveCachedDevices();
-				console.log(`[MMM-NowPlaying] discovered: "${name}" at ${host}`);
+				console.log(`[MMM-NowPlaying] discovered: "${this.devices[host].name}" at ${host}`);
 			});
 
 			browser.on("down", (svc) => {
 				const host = (svc.addresses || []).find(a => !a.includes(":")) || svc.host;
-				if (host && this.playing[host]) {
+				// Manual devices are polled directly — ignore mDNS down events for them
+				if (!host || (this.devices[host] && this.devices[host].manual)) return;
+				if (this.playing[host]) {
 					delete this.playing[host];
 					this.sendState();
 				}
@@ -156,8 +166,19 @@ module.exports = NodeHelper.create({
 
 	triggerRediscover: function () {
 		console.log("[MMM-NowPlaying] rediscovering...");
-		// Small delay to let the old browser fully shut down
-		setTimeout(() => this.setupBonjour(), 300);
+		// Snapshot manual devices before restarting the mDNS browser so they
+		// survive even if the browser teardown emits unexpected events
+		const pinned = Object.values(this.devices).filter(d => d.manual);
+		setTimeout(() => {
+			this.setupBonjour();
+			// Re-assert any pinned devices that may have been lost during restart
+			pinned.forEach(d => {
+				if (!this.devices[d.host]) {
+					this.devices[d.host] = d;
+					console.log(`[MMM-NowPlaying] re-asserted pinned device "${d.name}" at ${d.host}`);
+				}
+			});
+		}, 300);
 	},
 
 	// ---- polling ---------------------------------------------------
