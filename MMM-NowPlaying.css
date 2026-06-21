@@ -149,7 +149,7 @@
 
 .nowplaying-list-item {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: 12px;
 	padding: 9px 0;
 	border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -223,4 +223,23 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+/* Compact controls row inside each list item */
+.nowplaying-list-controls {
+	justify-content: flex-start;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.nowplaying-list-controls .nowplaying-btn {
+	width: 28px;
+	height: 28px;
+	font-size: 0.72rem;
+}
+
+.nowplaying-list-controls .nowplaying-btn-primary {
+	width: 32px;
+	height: 32px;
+	font-size: 0.82rem;
 }

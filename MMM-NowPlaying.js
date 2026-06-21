@@ -199,6 +199,12 @@ Module.register("MMM-NowPlaying", {
 		}
 
 		item.appendChild(info);
+
+		// Controls — compact version reusing buildControls()
+		const controls = this.buildControls(device);
+		controls.classList.add("nowplaying-list-controls");
+		info.appendChild(controls);
+
 		return item;
 	}
 });
