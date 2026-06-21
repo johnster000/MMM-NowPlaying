@@ -143,11 +143,11 @@ module.exports = NodeHelper.create({
 					player.getStatus((err, ms) => {
 						clearTimeout(timer);
 
-						if (err || !ms || !ms.media || ms.playerState === "IDLE") {
+						if (err || !ms || ms.playerState === "IDLE") {
 							return settle(null);
 						}
 
-						const meta   = ms.media.metadata || {};
+						const meta   = (ms.media && ms.media.metadata) || {};
 						const images = meta.images || [];
 
 						settle({
@@ -158,7 +158,7 @@ module.exports = NodeHelper.create({
 							album:       meta.albumName   || "",
 							artUrl:      images.length ? images[0].url : null,
 							playerState: ms.playerState,   // PLAYING | PAUSED | BUFFERING
-							contentId:   ms.media.contentId || ""
+							contentId:   (ms.media && ms.media.contentId) || ""
 						});
 					});
 				});
@@ -197,31 +197,37 @@ module.exports = NodeHelper.create({
 				client.join(status.applications[0], DefaultMediaReceiver, (err, player) => {
 					if (err) return finish();
 
-					switch (action) {
-						case "play":  player.play(finish);  break;
-						case "pause": player.pause(finish); break;
-						case "stop":  player.stop(finish);  break;
+					// Must call getStatus() first so castv2-client learns the
+					// current mediaSessionId — commands sent without it are ignored.
+					player.getStatus((err) => {
+						if (err) return finish();
 
-						// Queue skip — works with YouTube Music, Spotify, etc.
-						// castv2-client may not expose sessionRequest on all versions;
-						// wrap in try/catch so unsupported apps fail silently.
-						case "next":
-							try {
-								player.media.sessionRequest(
-									{ type: "QUEUE_UPDATE", jump: 1 }, finish
-								);
-							} catch (_) { finish(); }
-							break;
-						case "prev":
-							try {
-								player.media.sessionRequest(
-									{ type: "QUEUE_UPDATE", jump: -1 }, finish
-								);
-							} catch (_) { finish(); }
-							break;
+						switch (action) {
+							case "play":  player.play(finish);  break;
+							case "pause": player.pause(finish); break;
+							case "stop":  player.stop(finish);  break;
 
-						default: finish();
-					}
+							// Queue skip — works with YouTube Music, Spotify, etc.
+							// castv2-client may not expose sessionRequest on all versions;
+							// wrap in try/catch so unsupported apps fail silently.
+							case "next":
+								try {
+									player.media.sessionRequest(
+										{ type: "QUEUE_UPDATE", jump: 1 }, finish
+									);
+								} catch (_) { finish(); }
+								break;
+							case "prev":
+								try {
+									player.media.sessionRequest(
+										{ type: "QUEUE_UPDATE", jump: -1 }, finish
+									);
+								} catch (_) { finish(); }
+								break;
+
+							default: finish();
+						}
+					});
 				});
 			});
 		});
