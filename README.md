@@ -4,6 +4,8 @@ A [MagicMirror²](https://github.com/MichMich/MagicMirror) module that shows wha
 
 No Google account, no API keys, no cloud — everything talks directly to the speakers over your local network using the Cast protocol.
 
+![MMM-NowPlaying screenshot](screenshot.png)
+
 ---
 
 ## Features
