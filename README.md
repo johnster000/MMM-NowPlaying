@@ -1,6 +1,6 @@
 # MMM-NowPlaying
 
-A [MagicMirror²](https://github.com/MichMich/MagicMirror) module that shows what's currently playing on your Google Nest / Chromecast speakers. It discovers speakers automatically on your local network and displays album art, song title, artist, and the speaker name — with play/pause/skip controls right on the mirror.
+A [MagicMirror²](https://github.com/MagicMirrorOrg/MagicMirror) module that shows what's currently playing on your Google Nest / Chromecast speakers. It discovers speakers automatically on your local network and displays album art, song title, artist, and the speaker name — with play/pause/skip controls right on the mirror.
 
 No Google account, no API keys, no cloud — everything talks directly to the speakers over your local network using the Cast protocol.
 
@@ -86,7 +86,7 @@ Open `~/MagicMirror/config/config.js` and add an entry to the `modules` array:
   config: {
     maxWidth: "360px"
   }
-}
+},
 ```
 
 ### 4. Restart MagicMirror
@@ -96,6 +96,16 @@ pm2 restart MagicMirror
 ```
 
 The module will discover your Nest speakers automatically within a few seconds of starting. When nothing is playing it shows nothing; the widget appears as soon as music starts.
+
+---
+
+## Update
+
+```bash
+cd ~/MagicMirror/modules/MMM-NowPlaying
+git pull
+npm install
+```
 
 ---
 
@@ -151,7 +161,7 @@ Manual devices and mDNS-discovered devices can coexist; duplicates are merged.
     maxWidth:        "340px",
     showAlbum:       true
   }
-}
+},
 ```
 
 ---
